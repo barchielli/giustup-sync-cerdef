@@ -613,7 +613,7 @@ def sincronizza(args):
     play = navigatore = contesto = pagina = None
     try:
         play, navigatore, contesto, pagina = sessione()
-        voci = enumera(pagina, anno=args.anno, massimo=args.massimo * 3 if args.massimo else 0)
+        voci = enumera(pagina, anno=args.anno, massimo=(args.massimo or args.prova) * 3)
         riassunto["letti"] = len(voci)
         log("elenco: %d provvedimenti" % len(voci))
 
