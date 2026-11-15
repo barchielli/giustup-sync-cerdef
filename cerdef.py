@@ -327,9 +327,9 @@ def dettaglio(contesto, identificativo):
 
 def _numero(testo):
     """Il numero sta dopo 'n. ' negli estremi del CERDEF."""
-    m = re.search("n\\\\.\\\\s*(\\\\d+)", testo or "")
+    m = re.search(r"n\.\s*(\d+)", testo or "")
     if not m:
-        m = re.match("\\\\s*(\\\\d+)", testo or "")
+        m = re.match(r"\s*(\d+)", testo or "")
     return int(m.group(1)) if m else 0
 
 
@@ -767,7 +767,7 @@ def indicizza_da_s3(args):
         except Exception as e:
             log("record %s non letto: %r" % (chiave, e))
     gia = conosciuti([d["chiave_fonte"] for d in documenti if d.get("chiave_fonte")])
-    nuovi = [d for d in documenti if d.get("chiave_fonte") not in gia]
+    nuovi = [d for d in documenti if args.rifai or d.get("chiave_fonte") not in gia]
     log("gia' in indice: %d, da indicizzare: %d" % (len(documenti) - len(nuovi), len(nuovi)))
     falliti = 0
     for i in range(0, len(nuovi), RIGHE_PER_LOTTO):
