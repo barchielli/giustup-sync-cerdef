@@ -521,44 +521,68 @@ def os_chiama(metodo, percorso, corpo=None):
 
 
 def crea_indice_se_manca():
-    """L'indice e' quello della giustizia tributaria, condiviso con la banca
-    dati del MEF: questa fonte ci aggiunge i suoi documenti con `fonte=cerdef`."""
+    """L indice e quello della giustizia tributaria, condiviso con la banca
+    dati del MEF: questa fonte ci aggiunge i suoi documenti con fonte=cerdef."""
+    esiste = True
     try:
-        os_chiama("HEAD", "/" + IDX)
-        return
+        os_chiama("GET", "/" + IDX + "/_mapping")
     except Exception:
-        pass
-    mappatura = {
-        "mappings": {
-            "properties": {
-                "chiave_fonte": {"type": "keyword"},
-                "fonte": {"type": "keyword"},
-                "tipo": {"type": "keyword"},
-                "titolo": {"type": "text", "analyzer": "italian"},
-                "estremi": {"type": "text", "analyzer": "italian"},
-                "testo": {"type": "text", "analyzer": "italian"},
-                "massima": {"type": "text", "analyzer": "italian"},
-                "intitolazione": {"type": "text", "analyzer": "italian"},
-                "corte": {"type": "keyword"},
-                "sezione": {"type": "keyword"},
-                "grado": {"type": "keyword"},
-                "relatore": {"type": "text"},
-                "collegio": {"type": "text"},
-                "ricorsi": {"type": "text"},
-                "anno": {"type": "integer"},
-                "numero": {"type": "integer"},
-                "data": {"type": "date"},
-                "udienza": {"type": "text"},
-                "caratteri": {"type": "integer"},
-                "chiave_s3": {"type": "keyword", "index": False},
-                "created": {"type": "date"},
-                "ocr_fatto": {"type": "date"},
-                "ocr_caratteri": {"type": "integer"},
-                "versione_pipeline": {"type": "keyword"},
+        esiste = False
+    if not esiste:
+        mappatura = {
+            "mappings": {
+                "properties": {
+                    "chiave_fonte": {"type": "keyword"},
+                    "fonte": {"type": "keyword"},
+                    "tipo": {"type": "keyword"},
+                    "titolo": {"type": "text", "analyzer": "italian"},
+                    "estremi": {"type": "text", "analyzer": "italian"},
+                    "testo": {"type": "text", "analyzer": "italian"},
+                    "massima": {"type": "text", "analyzer": "italian"},
+                    "intitolazione": {"type": "text", "analyzer": "italian"},
+                    "corte": {"type": "keyword"},
+                    "sezione": {"type": "keyword"},
+                    "grado": {"type": "keyword"},
+                    "relatore": {"type": "text"},
+                    "collegio": {"type": "text"},
+                    "ricorsi": {"type": "text"},
+                    "anno": {"type": "integer"},
+                    "numero": {"type": "integer"},
+                    "data": {"type": "date"},
+                    "udienza": {"type": "text"},
+                    "caratteri": {"type": "integer"},
+                    "chiave_s3": {"type": "keyword", "index": False},
+                    "created": {"type": "date"},
+                    "ocr_fatto": {"type": "date"},
+                    "ocr_caratteri": {"type": "integer"},
+                    "versione_pipeline": {"type": "keyword"},
+                }
             }
         }
+        try:
+            os_chiama("PUT", "/" + IDX, mappatura)
+        except Exception as e:
+            if "already_exists" not in str(e) and "already exists" not in str(e):
+                raise
+    # i campi che questa fonte aggiunge a un indice gia esistente
+    aggiunte = {
+        "properties": {
+            "fonte": {"type": "keyword"},
+            "estremi": {"type": "text", "analyzer": "italian"},
+            "massima": {"type": "text", "analyzer": "italian"},
+            "intitolazione": {"type": "text", "analyzer": "italian"},
+            "corte": {"type": "keyword"},
+            "sezione": {"type": "keyword"},
+            "relatore": {"type": "text"},
+            "collegio": {"type": "text"},
+            "ricorsi": {"type": "text"},
+            "caratteri": {"type": "integer"},
+        }
     }
-    os_chiama("PUT", "/" + IDX, mappatura)
+    try:
+        os_chiama("PUT", "/" + IDX + "/_mapping", aggiunte)
+    except Exception as e:
+        log("mappatura non aggiornata: %r" % (e,))
 
 
 def conosciuti(chiavi):
