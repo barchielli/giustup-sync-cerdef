@@ -138,6 +138,15 @@ def _xml_result(pagina):
         return ""
 
 
+def _attendi_risultati(pagina, secondi=90):
+    """Aspetta che il JavaScript abbia messo i risultati in `xmlResult`."""
+    try:
+        pagina.wait_for_function("() => (window.xmlResult || '').length > 100", timeout=secondi * 1000)
+        return True
+    except Exception:
+        return False
+
+
 def enumera(pagina, anno=0, massimo=0):
     """Tutti gli identificativi delle sentenze delle Corti tributarie.
 
@@ -156,7 +165,7 @@ def enumera(pagina, anno=0, massimo=0):
         f.submit();
     }""", str(anno or ""))
     pagina.wait_for_load_state("domcontentloaded", timeout=90000)
-    time.sleep(ATTESA_RICERCA)
+    _attendi_risultati(pagina)
 
     voci = []
     visti = set()
@@ -207,7 +216,7 @@ def enumera(pagina, anno=0, massimo=0):
             pagina.wait_for_load_state("domcontentloaded", timeout=60000)
         except Exception:
             pass
-        time.sleep(ATTESA_RICERCA)
+        _attendi_risultati(pagina)
         pagina_corrente += 1
         if pagina_corrente > 4000:
             log("troppe pagine: mi fermo")
