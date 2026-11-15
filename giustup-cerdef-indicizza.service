@@ -1,0 +1,12 @@
+[Unit]
+Description=Giustizia tributaria: indicizza i record CERDEF lasciati su S3 dal raccoglitore di Milano
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/giustup-sync-cerdef
+ExecStart=/usr/bin/flock -n /run/lock/giustup-cerdef-indicizza.lock /usr/bin/python3 /opt/giustup-sync-cerdef/cerdef.py --indicizza-da-s3
+SuccessExitStatus=0 1
+Nice=10
+IOSchedulingClass=idle

@@ -1,0 +1,10 @@
+[Unit]
+Description=Settimanale, sabato 12:45 UTC: indicizza nel motore i record CERDEF depositati da Milano
+
+[Timer]
+OnCalendar=Sat *-*-* 12:45:00
+RandomizedDelaySec=300
+Persistent=false
+
+[Install]
+WantedBy=timers.target

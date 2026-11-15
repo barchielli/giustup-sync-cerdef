@@ -1,0 +1,14 @@
+[Unit]
+Description=Giustizia tributaria: le sentenze del CERDEF, raccolta su Milano e deposito su S3
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/giustup-sync-cerdef
+# Milano raccoglie e deposita: PDF e record su S3, nessun contatto con OpenSearch.
+# L'indicizzazione la fa il motore di Francoforte con cerdef.py --indicizza-da-s3.
+ExecStart=/usr/bin/flock -n /run/lock/giustup-cerdef.lock /usr/bin/python3 /opt/giustup-sync-cerdef/cerdef.py --senza-indice --salva-record --massimo 800
+SuccessExitStatus=0 1
+Nice=10
+IOSchedulingClass=idle
