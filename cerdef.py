@@ -306,6 +306,8 @@ def dettaglio(contesto, identificativo):
                     continue
                 testo_nodo = nodo.text
                 if testo_nodo and testo_nodo.strip():
+                    if testo_nodo.strip().lower().startswith("nessuna"):
+                        continue
                     dati[etichetta] = testo_nodo.strip()
             testo_html = ""
             nodo_testo = provvedimento.find("testo")
@@ -324,7 +326,10 @@ def dettaglio(contesto, identificativo):
 
 
 def _numero(testo):
-    m = re.match(r"\s*(\d+)", testo or "")
+    """Il numero sta dopo 'n. ' negli estremi del CERDEF."""
+    m = re.search("n\\\\.\\\\s*(\\\\d+)", testo or "")
+    if not m:
+        m = re.match("\\\\s*(\\\\d+)", testo or "")
     return int(m.group(1)) if m else 0
 
 
@@ -340,6 +345,7 @@ def scheda(dati, voci_elenco=None):
     """Dal dettaglio al documento d'indice: tutti i campi che la fonte da'."""
     estremi = dati.get("estremi") or (voci_elenco or {}).get("estremi", "")
     data_pron = dati.get("dataPronunciamento") or dati.get("udienza") or ""
+    deposito = _data_iso(estremi)
     anno = _anno(estremi, data_pron)
     numero = _numero(estremi)
     corte = ""
@@ -359,7 +365,8 @@ def scheda(dati, voci_elenco=None):
         "estremi": estremi,
         "anno": anno,
         "numero": numero,
-        "data": _data_iso(data_pron),
+        "data": deposito or _data_iso(data_pron),
+        "data_pronunciamento": _data_iso(data_pron),
         "corte": corte,
         "sezione": sezione,
         "grado": "secondo" if "secondo grado" in corte else ("primo" if corte else ""),
