@@ -494,6 +494,20 @@ def salva_record(cliente, documento):
 
 # ---------------------------------------------------------------- l'indice
 
+def _contesto_ssl():
+    """OpenSearch del motore vuole il certificato cliente (kirk): senza,
+    risponde 401."""
+    import ssl
+    contesto = ssl.create_default_context()
+    contesto.check_hostname = False
+    contesto.verify_mode = ssl.CERT_NONE
+    certificato = os.environ.get("GIUSTUP_CERT", "/etc/opensearch/kirk.pem")
+    chiave = os.environ.get("GIUSTUP_KEY", "/etc/opensearch/kirk-key.pem")
+    if os.path.exists(certificato) and os.path.exists(chiave):
+        contesto.load_cert_chain(certificato, chiave)
+    return contesto
+
+
 def os_chiama(metodo, percorso, corpo=None):
     import urllib.request
     import ssl
@@ -501,9 +515,7 @@ def os_chiama(metodo, percorso, corpo=None):
     dati = json.dumps(corpo).encode("utf-8") if corpo is not None else None
     richiesta = urllib.request.Request(base + percorso, data=dati, method=metodo)
     richiesta.add_header("Content-Type", "application/json")
-    contesto = ssl.create_default_context()
-    contesto.check_hostname = False
-    contesto.verify_mode = ssl.CERT_NONE
+    contesto = _contesto_ssl()
     with urllib.request.urlopen(richiesta, timeout=120, context=contesto) as risposta:
         return json.loads(risposta.read().decode("utf-8"))
 
@@ -575,9 +587,7 @@ def _bulk(documenti):
     base = os.environ.get("GIUSTUP_OPENSEARCH", "https://localhost:9200").rstrip("/")
     richiesta = urllib.request.Request(base + "/_bulk", data=corpo, method="POST")
     richiesta.add_header("Content-Type", "application/x-ndjson")
-    contesto = ssl.create_default_context()
-    contesto.check_hostname = False
-    contesto.verify_mode = ssl.CERT_NONE
+    contesto = _contesto_ssl()
     with urllib.request.urlopen(richiesta, timeout=180, context=contesto) as risposta:
         esito = json.loads(risposta.read().decode("utf-8"))
     errori = [v for v in esito.get("items", []) if v.get("index", {}).get("error")]
