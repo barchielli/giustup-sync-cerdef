@@ -122,7 +122,7 @@ def sessione():
         channel="chrome", headless=True,
         args=["--no-sandbox", "--disable-dev-shm-usage"])
     contesto = navigatore.new_context(
-        locale="it-IT", timezone_id="Europe/Rome",
+        locale="it-IT", timezone_id="Europe/Rome", ignore_https_errors=True,
         user_agent=("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                     "AppleWebKit/537.36 (KHTML, like Gecko) "
                     "Chrome/157.0.0.0 Safari/537.36"))
