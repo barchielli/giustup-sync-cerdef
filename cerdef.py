@@ -286,7 +286,13 @@ def dettaglio(contesto, identificativo):
             risposta = contesto.request.get(url, timeout=90000)
             if risposta.status != 200:
                 raise IOError("HTTP %d" % risposta.status)
-            xml = _testo_da_js(risposta.text(), "xmlDettaglio")
+            corpo_risposta = risposta.body()
+            try:
+                html_risposta = corpo_risposta.decode("utf-8")
+            except UnicodeDecodeError:
+                # le pagine del CERDEF dichiarano UTF-8 ma arrivano in cp1252
+                html_risposta = corpo_risposta.decode("cp1252", "replace")
+            xml = _testo_da_js(html_risposta, "xmlDettaglio")
             if not xml:
                 raise IOError("nessun xmlDettaglio nella pagina")
             radice = ET.fromstring(xml)
@@ -294,6 +300,13 @@ def dettaglio(contesto, identificativo):
             if provvedimento is None:
                 raise IOError("nessun Provvedimento nell'XML")
             dati = _campi(provvedimento, "Provvedimento")
+            for etichetta in ("intitolazione", "massima"):
+                nodo = provvedimento.find(".//" + etichetta)
+                if nodo is None:
+                    continue
+                testo_nodo = nodo.text
+                if testo_nodo and testo_nodo.strip():
+                    dati[etichetta] = testo_nodo.strip()
             testo_html = ""
             nodo_testo = provvedimento.find("testo")
             if nodo_testo is not None:
